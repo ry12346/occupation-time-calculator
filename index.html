@@ -45,7 +45,7 @@
 
                 <div class="rules" aria-label="計算ルール">
                     <div class="rule-item">
-                        <span class="rule-time">6:00〜24:00</span>
+                        <span class="rule-time">7:00〜24:00</span>
                         <strong>1マス 5分</strong>
                     </div>
                     <div class="rule-item midnight">
@@ -55,6 +55,10 @@
                     <div class="rule-item early">
                         <span class="rule-time">2:00〜6:00</span>
                         <strong>1マス 30分</strong>
+                    </div>
+                    <div class="rule-item midnight">
+                        <span class="rule-time">6:00〜7:00</span>
+                        <strong>1マス 10分</strong>
                     </div>
                     <div class="rule-item move">
                         <span class="rule-time">マス間移動</span>
@@ -110,6 +114,10 @@
                             <span class="entry-label">30分帯（2:00〜6:00）</span>
                             <p id="entry-early"></p>
                         </article>
+                        <article class="entry-card midnight">
+                            <span class="entry-label">10分帯（6:00〜7:00）</span>
+                            <p id="entry-morning-ten"></p>
+                        </article>
                     </div>
                 </section>
 
@@ -123,19 +131,24 @@
 
                     <div class="breakdown-list">
                         <div class="breakdown-row">
-                            <span><i class="legend-dot band-normal"></i>5分帯</span>
+                            <span><i class="legend-dot band-normal"></i>5分帯（7:00〜24:00）</span>
                             <strong id="normal-count"></strong>
                             <span id="normal-total"></span>
                         </div>
                         <div class="breakdown-row">
-                            <span><i class="legend-dot band-midnight"></i>10分帯</span>
+                            <span><i class="legend-dot band-midnight"></i>10分帯（0:00〜2:00）</span>
                             <strong id="midnight-count"></strong>
                             <span id="midnight-total"></span>
                         </div>
                         <div class="breakdown-row">
-                            <span><i class="legend-dot band-early"></i>30分帯</span>
+                            <span><i class="legend-dot band-early"></i>30分帯（2:00〜6:00）</span>
                             <strong id="early-count"></strong>
                             <span id="early-total"></span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span><i class="legend-dot band-midnight"></i>10分帯（6:00〜7:00）</span>
+                            <strong id="morning-ten-count"></strong>
+                            <span id="morning-ten-total"></span>
                         </div>
                     </div>
                 </section>
@@ -154,7 +167,7 @@
 
         <section class="notice" aria-labelledby="notice-heading">
             <h2 id="notice-heading">計算方法について</h2>
-            <p>各マスの占領を開始した時刻で、そのマスにかかる時間を決定します。占領中に0:00・2:00・6:00をまたいだ場合でも、そのマスは開始時点の所要時間のまま計算し、次のマスから新しい時間帯を適用します。マス間の移動15秒は、最後のマスの後には加算しません。</p>
+            <p>各マスの占領を開始した時刻で、そのマスにかかる時間を決定します。占領中に0:00・2:00・6:00・7:00をまたいだ場合でも、そのマスは開始時点の所要時間のまま計算し、次のマスから新しい時間帯を適用します。マス間の移動15秒は、最後のマスの後には加算しません。</p>
         </section>
     </main>
 

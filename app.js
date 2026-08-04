@@ -104,6 +104,9 @@
         if (key === "earlyMorning") {
             return "band-early";
         }
+        if (key === "morningTen") {
+            return "band-midnight";
+        }
         return "band-normal";
     }
 
@@ -118,7 +121,7 @@
                 "<div class=\"timeline-content\">" +
                     "<div class=\"timeline-title\">" +
                         "<strong>" + range + "</strong>" +
-                        "<span class=\"band-badge " + getBandClass(segment.band.key) + "\">1マス " + segment.band.shortLabel + "</span>" +
+                        "<span class=\"band-badge " + getBandClass(segment.band.key) + "\">" + segment.band.description + "・1マス " + segment.band.shortLabel + "</span>" +
                     "</div>" +
                     "<p>" + compactFormatter.format(segment.startTime) + " にこの時間帯へ移行</p>" +
                 "</div>" +
@@ -144,15 +147,21 @@
             result.firstEntry.earlyMorning,
             "今回の計算では2:00〜6:00に入りません"
         );
+        document.getElementById("entry-morning-ten").innerHTML = formatEntry(
+            result.firstEntry.morningTen,
+            "今回の計算では6:00〜7:00に入りません"
+        );
 
         document.getElementById("timeline-list").innerHTML = renderSegments(result.segments);
 
         setText("normal-count", result.tileCountsByBand.normal.toLocaleString("ja-JP") + "マス");
         setText("midnight-count", result.tileCountsByBand.midnight.toLocaleString("ja-JP") + "マス");
         setText("early-count", result.tileCountsByBand.earlyMorning.toLocaleString("ja-JP") + "マス");
+        setText("morning-ten-count", result.tileCountsByBand.morningTen.toLocaleString("ja-JP") + "マス");
         setText("normal-total", formatDuration(result.secondsByBand.normal));
         setText("midnight-total", formatDuration(result.secondsByBand.midnight));
         setText("early-total", formatDuration(result.secondsByBand.earlyMorning));
+        setText("morning-ten-total", formatDuration(result.secondsByBand.morningTen));
 
         resultSection.hidden = false;
         copyButton.disabled = false;
@@ -202,6 +211,9 @@
         var earlyText = result.firstEntry.earlyMorning
             ? result.firstEntry.earlyMorning.tile.toLocaleString("ja-JP") + "マス目（" + compactFormatter.format(result.firstEntry.earlyMorning.time) + "）"
             : "該当なし";
+        var morningTenText = result.firstEntry.morningTen
+            ? result.firstEntry.morningTen.tile.toLocaleString("ja-JP") + "マス目（" + compactFormatter.format(result.firstEntry.morningTen.time) + "）"
+            : "該当なし";
 
         return [
             "占領時間計算結果",
@@ -209,8 +221,9 @@
             "マス数: " + result.tileCount.toLocaleString("ja-JP") + "マス",
             "終了予想: " + dateTimeFormatter.format(result.endTime),
             "所要時間: " + formatDuration(result.totalSeconds),
-            "10分帯に入るマス: " + midnightText,
-            "30分帯に入るマス: " + earlyText
+            "10分帯（0:00〜2:00）に入るマス: " + midnightText,
+            "30分帯（2:00〜6:00）に入るマス: " + earlyText,
+            "10分帯（6:00〜7:00）に入るマス: " + morningTenText
         ].join("\n");
     }
 

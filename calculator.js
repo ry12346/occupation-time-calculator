@@ -18,7 +18,7 @@
             label: "通常時間帯",
             shortLabel: "5分",
             secondsPerTile: 5 * 60,
-            description: "6:00〜24:00"
+            description: "7:00〜24:00"
         },
         midnight: {
             key: "midnight",
@@ -33,6 +33,13 @@
             shortLabel: "30分",
             secondsPerTile: 30 * 60,
             description: "2:00〜6:00"
+        },
+        morningTen: {
+            key: "morningTen",
+            label: "朝時間帯",
+            shortLabel: "10分",
+            secondsPerTile: 10 * 60,
+            description: "6:00〜7:00"
         }
     };
 
@@ -55,6 +62,10 @@
 
         if (hour >= 2 && hour < 6) {
             return BANDS.earlyMorning;
+        }
+
+        if (hour >= 6 && hour < 7) {
+            return BANDS.morningTen;
         }
 
         return BANDS.normal;
@@ -82,19 +93,22 @@
             normal: 0,
             midnight: 0,
             earlyMorning: 0,
+            morningTen: 0,
             movement: Math.max(0, tileCount - 1) * MOVE_SECONDS
         };
         var tileCounts = {
             normal: 0,
             midnight: 0,
-            earlyMorning: 0
+            earlyMorning: 0,
+            morningTen: 0
         };
         var transitions = [];
         var segments = [];
         var activeSegment = null;
         var firstEntry = {
             midnight: null,
-            earlyMorning: null
+            earlyMorning: null,
+            morningTen: null
         };
 
         for (var tile = 1; tile <= tileCount; tile += 1) {
@@ -121,7 +135,7 @@
                 });
             }
 
-            if ((band.key === "midnight" || band.key === "earlyMorning") && !firstEntry[band.key]) {
+            if ((band.key === "midnight" || band.key === "earlyMorning" || band.key === "morningTen") && !firstEntry[band.key]) {
                 firstEntry[band.key] = {
                     tile: tile,
                     time: new Date(currentMs),
@@ -141,7 +155,7 @@
         activeSegment.endTile = tileCount;
         segments.push(activeSegment);
 
-        var occupationSeconds = totals.normal + totals.midnight + totals.earlyMorning;
+        var occupationSeconds = totals.normal + totals.midnight + totals.earlyMorning + totals.morningTen;
         var totalSeconds = occupationSeconds + totals.movement;
 
         return {
@@ -155,7 +169,8 @@
             secondsByBand: {
                 normal: totals.normal,
                 midnight: totals.midnight,
-                earlyMorning: totals.earlyMorning
+                earlyMorning: totals.earlyMorning,
+                morningTen: totals.morningTen
             },
             tileCountsByBand: tileCounts,
             firstEntry: firstEntry,
