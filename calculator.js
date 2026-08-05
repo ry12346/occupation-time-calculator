@@ -11,6 +11,7 @@
 
     var MOVE_SECONDS = 15;
     var MAX_TILES = 100000;
+    var VERSION = "2026.08.05-2";
 
     var BANDS = {
         normal: {
@@ -180,6 +181,7 @@
     }
 
     return {
+        VERSION: VERSION,
         BANDS: BANDS,
         MOVE_SECONDS: MOVE_SECONDS,
         MAX_TILES: MAX_TILES,

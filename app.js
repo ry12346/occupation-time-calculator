@@ -105,7 +105,7 @@
             return "band-early";
         }
         if (key === "morningTen") {
-            return "band-midnight";
+            return "band-morning";
         }
         return "band-normal";
     }
