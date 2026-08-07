@@ -6,7 +6,7 @@
     <meta name="description" content="占領開始日時とマス数から、時間帯別の占領時間を考慮して終了予想日時を計算します。">
     <meta name="theme-color" content="#111827">
     <title>占領時間・到着予想時刻計算</title>
-    <link rel="stylesheet" href="styles.css?v=20260805-2">
+    <link rel="stylesheet" href="styles.css?v=20260807-1">
 </head>
 <body>
     <header class="site-header">
@@ -42,6 +42,35 @@
                         </span>
                     </label>
                 </div>
+
+                <section class="coordinate-helper" aria-labelledby="coordinate-heading">
+                    <div class="coordinate-helper-heading">
+                        <div>
+                            <span class="optional-label">任意</span>
+                            <h3 id="coordinate-heading">座標からマス数を算出</h3>
+                        </div>
+                        <button type="button" id="clear-coordinates" class="text-button" disabled>座標をクリア</button>
+                    </div>
+
+                    <p class="coordinate-help">ゲームでコピーした座標を1地点ずつ貼り付けてください。貼り付けるたびに1地点として確定し、2地点目以降は推定マス数を上の「占領するマス数」へ自動反映します。</p>
+
+                    <div class="coordinate-entry-row">
+                        <label class="field coordinate-field">
+                            <span>次の座標を貼り付け</span>
+                            <input id="coordinate-input" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="例: 642,1671">
+                        </label>
+                        <button type="button" id="add-coordinate" class="secondary-button coordinate-add-button">追加</button>
+                    </div>
+
+                    <p id="coordinate-message" class="coordinate-message" aria-live="polite">最初の座標がスタート地点になります。</p>
+                    <ol id="coordinate-list" class="coordinate-list" aria-label="登録済み経路座標"></ol>
+
+                    <div id="coordinate-summary" class="coordinate-summary" hidden>
+                        <span>座標からの推定</span>
+                        <strong><span id="coordinate-total">0</span>マス</strong>
+                        <small>斜め移動可として、各区間の max(|ΔX|, |ΔY|) を合計。スタート地点は含みません。</small>
+                    </div>
+                </section>
 
                 <div class="rules" aria-label="計算ルール">
                     <div class="rule-item midnight">
@@ -175,7 +204,7 @@
         <p>ブラウザ内だけで計算します。入力内容は外部へ送信されません。</p>
     </footer>
 
-    <script src="calculator.js?v=20260805-2"></script>
-    <script src="app.js?v=20260805-2"></script>
+    <script src="calculator.js?v=20260807-1"></script>
+    <script src="app.js?v=20260807-1"></script>
 </body>
 </html>

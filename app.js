@@ -9,6 +9,14 @@
     var copyButton = document.getElementById("copy-result");
     var errorBox = document.getElementById("error-message");
     var resultSection = document.getElementById("results");
+    var coordinateInput = document.getElementById("coordinate-input");
+    var addCoordinateButton = document.getElementById("add-coordinate");
+    var clearCoordinatesButton = document.getElementById("clear-coordinates");
+    var coordinateList = document.getElementById("coordinate-list");
+    var coordinateSummary = document.getElementById("coordinate-summary");
+    var coordinateTotal = document.getElementById("coordinate-total");
+    var coordinateMessage = document.getElementById("coordinate-message");
+    var routePoints = [];
 
     var dateTimeFormatter = new Intl.DateTimeFormat("ja-JP", {
         year: "numeric",
@@ -203,6 +211,211 @@
         startInput.value = toDateTimeLocalValue(now);
     }
 
+    function setCoordinateMessage(text, isError) {
+        coordinateMessage.textContent = text;
+        coordinateMessage.classList.toggle("is-error", Boolean(isError));
+    }
+
+    function formatCoordinate(point) {
+        return point.x.toLocaleString("ja-JP", { useGrouping: false }) + "," +
+            point.y.toLocaleString("ja-JP", { useGrouping: false });
+    }
+
+    function saveRoutePoints() {
+        try {
+            if (routePoints.length > 0) {
+                window.localStorage.setItem("occupationRoutePoints", JSON.stringify(routePoints));
+            } else {
+                window.localStorage.removeItem("occupationRoutePoints");
+            }
+        } catch (storageError) {
+            // 保存できない環境でも座標計算自体は継続します。
+        }
+    }
+
+    function createCoordinateItem(point, index, route) {
+        var item = document.createElement("li");
+        item.className = "coordinate-item";
+
+        var main = document.createElement("div");
+        main.className = "coordinate-item-main";
+
+        var number = document.createElement("span");
+        number.className = "coordinate-number";
+        number.textContent = String(index + 1);
+
+        var details = document.createElement("div");
+        details.className = "coordinate-details";
+
+        var value = document.createElement("strong");
+        value.className = "coordinate-value";
+        value.textContent = formatCoordinate(point);
+        details.appendChild(value);
+
+        var role = document.createElement("span");
+        role.className = "coordinate-role";
+        if (index === 0) {
+            role.textContent = "スタート";
+        } else if (index === route.points.length - 1) {
+            role.textContent = "現在の終点";
+        } else {
+            role.textContent = "経由";
+        }
+        details.appendChild(role);
+
+        var remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "coordinate-remove";
+        remove.textContent = "削除";
+        remove.setAttribute("aria-label", formatCoordinate(point) + " を削除");
+        remove.addEventListener("click", function () {
+            routePoints.splice(index, 1);
+            renderCoordinateRoute(true);
+            if (routePoints.length === 0) {
+                setCoordinateMessage("最初の座標がスタート地点になります。", false);
+            } else if (routePoints.length === 1) {
+                setCoordinateMessage("もう1地点追加するとマス数を自動計算します。", false);
+            }
+        });
+
+        main.appendChild(number);
+        main.appendChild(details);
+        main.appendChild(remove);
+        item.appendChild(main);
+
+        if (index > 0) {
+            var segment = route.segments[index - 1];
+            var segmentText = document.createElement("div");
+            segmentText.className = "coordinate-segment";
+            segmentText.textContent = "前地点から +" + segment.tiles.toLocaleString("ja-JP") +
+                "マス（ΔX " + segment.dx.toLocaleString("ja-JP") +
+                " / ΔY " + segment.dy.toLocaleString("ja-JP") + "）";
+            item.appendChild(segmentText);
+        }
+
+        return item;
+    }
+
+    function renderCoordinateRoute(applyToTileCount) {
+        var route = calculator.calculateRoute(routePoints);
+        coordinateList.replaceChildren();
+
+        route.points.forEach(function (point, index) {
+            coordinateList.appendChild(createCoordinateItem(point, index, route));
+        });
+
+        clearCoordinatesButton.disabled = route.points.length === 0;
+        coordinateSummary.hidden = route.points.length < 2;
+
+        if (route.points.length >= 2) {
+            coordinateTotal.textContent = route.totalTiles.toLocaleString("ja-JP");
+
+            if (applyToTileCount) {
+                if (route.totalTiles < 1) {
+                    setCoordinateMessage("経路の距離が0マスです。異なる座標を追加してください。", true);
+                } else if (route.totalTiles > calculator.MAX_TILES) {
+                    setCoordinateMessage("推定マス数が上限を超えています。座標を確認してください。", true);
+                } else {
+                    tileInput.value = String(route.totalTiles);
+                    calculate();
+                    setCoordinateMessage(
+                        route.points.length.toLocaleString("ja-JP") + "地点を登録。推定" +
+                        route.totalTiles.toLocaleString("ja-JP") + "マスを自動反映しました。",
+                        false
+                    );
+                }
+            }
+        } else {
+            coordinateTotal.textContent = "0";
+        }
+
+        saveRoutePoints();
+        return route;
+    }
+
+    function hasAmbiguousJoinedCoordinates(source) {
+        var commaIndexes = [];
+        var index;
+
+        for (index = 0; index < source.length; index += 1) {
+            if (source[index] === "," || source[index] === "，") {
+                commaIndexes.push(index);
+            }
+        }
+
+        for (index = 0; index < commaIndexes.length - 1; index += 1) {
+            var betweenCommas = source.slice(commaIndexes[index] + 1, commaIndexes[index + 1]);
+            if (/^\s*-?\d+\s*$/.test(betweenCommas)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function addCoordinatesFromText(text) {
+        var source = String(text || "").trim();
+        if (!source) {
+            setCoordinateMessage("座標を入力または貼り付けてください。", true);
+            coordinateInput.focus();
+            return;
+        }
+
+        if (hasAmbiguousJoinedCoordinates(source)) {
+            setCoordinateMessage("座標同士の区切りを判別できませんでした。1地点ずつ貼り付けてください。", true);
+            coordinateInput.value = "";
+            coordinateInput.focus();
+            return;
+        }
+
+        var parsed = calculator.parseCoordinateText(source);
+        var commaCount = (source.match(/[,，]/g) || []).length;
+
+        if (parsed.length === 0) {
+            setCoordinateMessage("座標を認識できません。例: 642,1671", true);
+            coordinateInput.focus();
+            return;
+        }
+
+        if (commaCount > parsed.length) {
+            setCoordinateMessage("座標同士の区切りを判別できませんでした。1地点ずつ貼り付けてください。", true);
+            coordinateInput.value = "";
+            coordinateInput.focus();
+            return;
+        }
+
+        var added = 0;
+        parsed.forEach(function (point) {
+            var last = routePoints[routePoints.length - 1];
+            if (last && last.x === point.x && last.y === point.y) {
+                return;
+            }
+            routePoints.push(point);
+            added += 1;
+        });
+
+        coordinateInput.value = "";
+        coordinateInput.focus();
+
+        if (added === 0) {
+            setCoordinateMessage("直前と同じ座標のため追加しませんでした。", true);
+            return;
+        }
+
+        renderCoordinateRoute(true);
+        if (routePoints.length === 1) {
+            setCoordinateMessage("スタート地点を登録しました。次の座標を貼り付けてください。", false);
+        }
+    }
+
+    function clearCoordinates() {
+        routePoints = [];
+        renderCoordinateRoute(false);
+        coordinateInput.value = "";
+        setCoordinateMessage("座標をクリアしました。マス数の手動入力値はそのままです。", false);
+        coordinateInput.focus();
+    }
+
     function buildCopyText() {
         var result = calculator.calculateOccupation(parseLocalDateTime(startInput.value), Number(tileInput.value));
         var midnightText = result.firstEntry.midnight
@@ -236,13 +449,20 @@
             return;
         }
 
-        navigator.clipboard.writeText(text).then(function () {
-            var original = copyButton.textContent;
-            copyButton.textContent = "コピーしました";
-            window.setTimeout(function () {
-                copyButton.textContent = original;
-            }, 1600);
-        }).catch(function () {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+                var original = copyButton.textContent;
+                copyButton.textContent = "コピーしました";
+                window.setTimeout(function () {
+                    copyButton.textContent = original;
+                }, 1600);
+            }).catch(copyWithTextarea);
+            return;
+        }
+
+        copyWithTextarea();
+
+        function copyWithTextarea() {
             var textarea = document.createElement("textarea");
             textarea.value = text;
             textarea.setAttribute("readonly", "readonly");
@@ -252,19 +472,42 @@
             textarea.select();
             document.execCommand("copy");
             document.body.removeChild(textarea);
-        });
+        }
     }
 
     form.addEventListener("submit", calculate);
     nowButton.addEventListener("click", setNow);
     copyButton.addEventListener("click", copyResult);
+    addCoordinateButton.addEventListener("click", function () {
+        addCoordinatesFromText(coordinateInput.value);
+    });
+    clearCoordinatesButton.addEventListener("click", clearCoordinates);
+
+    coordinateInput.addEventListener("paste", function (event) {
+        var clipboard = event.clipboardData || window.clipboardData;
+        if (!clipboard) {
+            return;
+        }
+
+        event.preventDefault();
+        addCoordinatesFromText(clipboard.getData("text"));
+    });
+
+    coordinateInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            addCoordinatesFromText(coordinateInput.value);
+        }
+    });
 
     var savedStart = null;
     var savedTiles = null;
+    var savedRoute = null;
 
     try {
         savedStart = window.localStorage.getItem("occupationStart");
         savedTiles = window.localStorage.getItem("occupationTiles");
+        savedRoute = window.localStorage.getItem("occupationRoutePoints");
     } catch (storageError) {
         // 保存領域を利用できない環境では既定値を使います。
     }
@@ -279,5 +522,17 @@
         tileInput.value = savedTiles;
     }
 
+    if (savedRoute) {
+        try {
+            var parsedRoute = JSON.parse(savedRoute);
+            if (Array.isArray(parsedRoute)) {
+                routePoints = calculator.calculateRoute(parsedRoute).points;
+            }
+        } catch (routeError) {
+            routePoints = [];
+        }
+    }
+
+    renderCoordinateRoute(false);
     calculate();
 }());

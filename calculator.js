@@ -11,7 +11,7 @@
 
     var MOVE_SECONDS = 15;
     var MAX_TILES = 100000;
-    var VERSION = "2026.08.05-2";
+    var VERSION = "2026.08.07-1";
 
     var BANDS = {
         normal: {
@@ -70,6 +70,66 @@
         }
 
         return BANDS.normal;
+    }
+
+
+    function parseCoordinateText(text) {
+        var source = String(text || "");
+        var regex = /(-?\d+)\s*[,，]\s*(-?\d+)/g;
+        var points = [];
+        var match;
+
+        while ((match = regex.exec(source)) !== null) {
+            points.push({
+                x: Number(match[1]),
+                y: Number(match[2])
+            });
+        }
+
+        return points;
+    }
+
+    function calculateRoute(points) {
+        if (!Array.isArray(points)) {
+            throw new Error("座標データが正しくありません。");
+        }
+
+        var normalized = points.map(function (point) {
+            var x = Number(point && point.x);
+            var y = Number(point && point.y);
+
+            if (!Number.isInteger(x) || !Number.isInteger(y)) {
+                throw new Error("座標は整数で入力してください。");
+            }
+
+            return { x: x, y: y };
+        });
+
+        var segments = [];
+        var totalTiles = 0;
+
+        for (var index = 1; index < normalized.length; index += 1) {
+            var from = normalized[index - 1];
+            var to = normalized[index];
+            var dx = Math.abs(to.x - from.x);
+            var dy = Math.abs(to.y - from.y);
+            var tiles = Math.max(dx, dy);
+
+            segments.push({
+                from: { x: from.x, y: from.y },
+                to: { x: to.x, y: to.y },
+                dx: dx,
+                dy: dy,
+                tiles: tiles
+            });
+            totalTiles += tiles;
+        }
+
+        return {
+            points: normalized,
+            segments: segments,
+            totalTiles: totalTiles
+        };
     }
 
     function validateInput(start, tileCount) {
@@ -186,6 +246,8 @@
         MOVE_SECONDS: MOVE_SECONDS,
         MAX_TILES: MAX_TILES,
         getBand: getBand,
+        parseCoordinateText: parseCoordinateText,
+        calculateRoute: calculateRoute,
         calculateOccupation: calculateOccupation
     };
 }));
