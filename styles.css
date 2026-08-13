@@ -178,11 +178,58 @@ input:focus {
     border-color: rgba(56, 189, 248, 0.6);
 }
 
-/* iOS Safari can give datetime-local an intrinsic minimum width that exceeds
-   the grid column. Keep the native picker while allowing the control to shrink. */
-input[type="datetime-local"] {
+/*
+   iOS Safari currently miscalculates width: 100% for date/time controls when
+   padding is applied directly to the input. The visible frame and padding live
+   on this wrapper; the native datetime-local input itself has no padding.
+*/
+.datetime-input-shell {
+    display: flex;
+    align-items: center;
+    width: 100%;
     min-width: 0;
     max-width: 100%;
+    min-height: 56px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0 16px;
+    background: rgba(8, 17, 31, 0.8);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.datetime-input-shell:hover,
+.datetime-input-shell:focus-within {
+    border-color: rgba(56, 189, 248, 0.6);
+}
+
+.datetime-input-shell:focus-within {
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
+}
+
+.datetime-input-shell input[type="datetime-local"] {
+    flex: 1 1 0;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 54px;
+    height: 54px;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    color: var(--text);
+    background: transparent;
+    box-shadow: none;
+}
+
+.datetime-input-shell input[type="datetime-local"]:hover,
+.datetime-input-shell input[type="datetime-local"]:focus {
+    border-color: transparent;
+}
+
+.datetime-input-shell input[type="datetime-local"]:focus-visible {
+    outline: 0;
 }
 
 .input-with-unit {
@@ -756,10 +803,7 @@ footer p {
 }
 
 @media (max-width: 520px) {
-    input[type="datetime-local"] {
-        width: 100%;
-        min-width: 0;
-        max-width: 100%;
+    .datetime-input-shell input[type="datetime-local"] {
         font-size: 16px;
     }
 
