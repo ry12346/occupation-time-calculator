@@ -179,21 +179,21 @@ input:focus {
 }
 
 /*
-   iOS Safari currently miscalculates width: 100% for date/time controls when
-   padding is applied directly to the input. The visible frame and padding live
-   on this wrapper; the native datetime-local input itself has no padding.
+   日時の見た目は通常のテキストで描画し、ネイティブの datetime-local は
+   枠全体に透明で重ねます。Safari 固有の内部レイアウトに見た目を依存させません。
 */
 .datetime-input-shell {
-    display: flex;
-    align-items: center;
+    position: relative;
+    display: block;
     width: 100%;
     min-width: 0;
     max-width: 100%;
+    height: 56px;
     min-height: 56px;
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 0 16px;
+    padding: 0;
     background: rgba(8, 17, 31, 0.8);
     transition: border-color 150ms ease, box-shadow 150ms ease;
 }
@@ -207,20 +207,48 @@ input:focus {
     box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
 }
 
+.datetime-display {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    padding: 0 16px;
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.datetime-display.is-empty {
+    color: var(--muted);
+    font-weight: 600;
+}
+
 .datetime-input-shell input[type="datetime-local"] {
-    flex: 1 1 0;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    min-height: 54px;
-    height: 54px;
+    height: 100%;
+    min-height: 0;
     margin: 0;
     border: 0;
-    border-radius: 0;
+    border-radius: 14px;
     padding: 0;
-    color: var(--text);
+    opacity: 0;
     background: transparent;
     box-shadow: none;
+    cursor: pointer;
 }
 
 .datetime-input-shell input[type="datetime-local"]:hover,
@@ -803,8 +831,17 @@ footer p {
 }
 
 @media (max-width: 520px) {
-    .datetime-input-shell input[type="datetime-local"] {
+    /* iPhone Safari: visible form controls are explicitly compact and centered. */
+    .form-grid .datetime-input-shell,
+    .form-grid .input-with-unit > input {
+        height: 48px;
+        min-height: 48px;
+    }
+
+    .datetime-display {
         font-size: 16px;
+        line-height: 1;
+        transform: translateY(1px);
     }
 
     .site-header,

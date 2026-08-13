@@ -4,6 +4,7 @@
     var calculator = window.OccupationCalculator;
     var form = document.getElementById("calculator-form");
     var startInput = document.getElementById("start-datetime");
+    var startDisplay = document.getElementById("start-datetime-display");
     var tileInput = document.getElementById("tile-count");
     var nowButton = document.getElementById("set-now");
     var copyButton = document.getElementById("copy-result");
@@ -50,6 +51,22 @@
             pad(date.getDate()) + "T" +
             pad(date.getHours()) + ":" +
             pad(date.getMinutes());
+    }
+
+    function formatDateTimeInputDisplay(value) {
+        var match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(value || ""));
+
+        if (!match) {
+            return "日時を選択";
+        }
+
+        return match[1] + "/" + match[2] + "/" + match[3] + " " + match[4] + ":" + match[5];
+    }
+
+    function syncStartDisplay() {
+        var hasValue = Boolean(startInput.value);
+        startDisplay.textContent = formatDateTimeInputDisplay(startInput.value);
+        startDisplay.classList.toggle("is-empty", !hasValue);
     }
 
     function parseLocalDateTime(value) {
@@ -209,6 +226,7 @@
         var now = new Date();
         now.setSeconds(0, 0);
         startInput.value = toDateTimeLocalValue(now);
+        syncStartDisplay();
     }
 
     function setCoordinateMessage(text, isError) {
@@ -475,6 +493,12 @@
         }
     }
 
+    startInput.addEventListener("input", syncStartDisplay);
+    startInput.addEventListener("change", function () {
+        syncStartDisplay();
+        calculate();
+    });
+
     form.addEventListener("submit", calculate);
     nowButton.addEventListener("click", setNow);
     copyButton.addEventListener("click", copyResult);
@@ -514,6 +538,7 @@
 
     if (savedStart) {
         startInput.value = savedStart;
+        syncStartDisplay();
     } else {
         setNow();
     }
